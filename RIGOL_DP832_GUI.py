@@ -1,7 +1,7 @@
 import sys
 import os
 import time
-import visa
+import pyvisa as visa
 
 from PyQt5.QtWidgets import (QRadioButton, QTextBrowser, QDialogButtonBox, QDialog, QAction, QMainWindow, QGroupBox, QComboBox, QSpinBox, QDoubleSpinBox, QWidget, QPushButton, QApplication, QCheckBox, QGridLayout, QLineEdit, QLabel,QMessageBox)
 from PyQt5.QtGui import (QIcon, QFont)
@@ -1775,35 +1775,32 @@ class DP832(QMainWindow):
             self.showWarning("from ResourceManager", str(ex))
             print(ex)
             return
-        if self.main_rigol_rm.last_status == 0:
-            self.main_rigol_hosting = "TCPIP::" + self.main_le_ipaddr.text() + "::inst0::INSTR"
-            try:
-                self.main_rigol_inst = self.main_rigol_rm.open_resource(self.main_rigol_hosting)
-            except Exception as ex:
-                self.showWarning("from open_resource", str(ex))
-                self.main_rigol_rm.close()
-                print(ex)
-                return
-            inst = self.main_rigol_inst.write('*CLS')
-            inst = self.main_rigol_inst.query('*IDN?')
-            self.main_rigol_connected = "Connected: "+str(inst.rstrip('\n'))+" ("+ datetime.now().strftime('%Y-%m-%d %H:%M:%S') +") "
-            self.main_btn_connect.setEnabled(False)
-            self.main_btn_disconnect.setEnabled(True)
-            self.main_btn_plot.setEnabled(True)
-            for i in range(0,self.NO_CHANNELS):
-                self.ch_groupBox[i].setEnabled(True)
-            self.ch_groupBox[0].setChecked(True)
-            try:
-                data = self.main_rigol_inst.query(':APPL CH1; *OPC?')
-            except Exception as ex:
-                self.showWarning("from query", str(ex))
-                print(ex)
-                return
-            if data != '1\n':
-                return
-            self.main_lbl_instr.setText(self.main_rigol_connected)
-        else:
-            self.main_lbl_instr.setText("Disconnected: " + str(self.main_rigol_rm.last_status) )
+        self.main_rigol_hosting = "TCPIP::" + self.main_le_ipaddr.text() + "::inst0::INSTR"
+        try:
+            self.main_rigol_inst = self.main_rigol_rm.open_resource(self.main_rigol_hosting)
+        except Exception as ex:
+            self.showWarning("from open_resource", str(ex))
+            self.main_rigol_rm.close()
+            print(ex)
+            return
+        inst = self.main_rigol_inst.write('*CLS')
+        inst = self.main_rigol_inst.query('*IDN?')
+        self.main_rigol_connected = "Connected: "+str(inst.rstrip('\n'))+" ("+ datetime.now().strftime('%Y-%m-%d %H:%M:%S') +") "
+        self.main_btn_connect.setEnabled(False)
+        self.main_btn_disconnect.setEnabled(True)
+        self.main_btn_plot.setEnabled(True)
+        for i in range(0,self.NO_CHANNELS):
+            self.ch_groupBox[i].setEnabled(True)
+        self.ch_groupBox[0].setChecked(True)
+        try:
+            data = self.main_rigol_inst.query(':APPL CH1; *OPC?')
+        except Exception as ex:
+            self.showWarning("from query", str(ex))
+            print(ex)
+            return
+        if data != '1\n':
+            return
+        self.main_lbl_instr.setText(self.main_rigol_connected)
 
         self.main_rigol_inst.chunk_size = 2048
 
